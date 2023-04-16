@@ -241,7 +241,7 @@ class MarkdownTranslator [RegexType: type] {
                 }
             }),
             // all chars
-            Rule("[^\n*`!\\x5B]+", closure(args: Array[String]) {
+            Rule("[^\n*\\\\`!\\x5B]+", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 this.output += args(0);
             }),
