@@ -48,6 +48,7 @@ class MarkdownTranslator [RegexType: type] {
     def content: String;
     def index: Int;
     def output: String;
+    def linksInNewTab: Bool = 0;
 
     //---------
     // Handlers
@@ -185,7 +186,11 @@ class MarkdownTranslator [RegexType: type] {
             // link
             Rule("\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
                 if args(1) == "" args(1) = args(2);
-                this.output += String.format("<a href=\"%s\">%s</a>", args(2).buf, args(1).buf);
+                if this.linksInNewTab {
+                    this.output += String.format("<a href=\"%s\" target=\"_blank\">%s</a>", args(2).buf, args(1).buf);
+                } else {
+                    this.output += String.format("<a href=\"%s\">%s</a>", args(2).buf, args(1).buf);
+                }
             }),
             // image
             Rule("!\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
