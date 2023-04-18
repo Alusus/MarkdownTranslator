@@ -186,6 +186,7 @@ class MarkdownTranslator [RegexType: type] {
             // link
             Rule("\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
                 if args(1) == "" args(1) = args(2);
+                if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 if this.linksInNewTab {
                     this.output += String.format("<a href=\"%s\" target=\"_blank\">%s</a>", args(2).buf, args(1).buf);
                 } else {
