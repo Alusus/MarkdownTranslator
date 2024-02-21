@@ -2,6 +2,8 @@
 // MarkdownTranslator
 // Translates MD documents into HTML.
 class MarkdownTranslator [RegexType: type] {
+    use Srl;
+
     //----------
     // Sub Types
 
@@ -39,6 +41,8 @@ class MarkdownTranslator [RegexType: type] {
         }
     }
 
+    def HtmlTagHandler: alias closure (tag: CharsPtr, sourceText1: String, sourceText2: String): String;
+
     //-----------------
     // Member Variables
 
@@ -49,6 +53,7 @@ class MarkdownTranslator [RegexType: type] {
     def index: Int;
     def output: String;
     def linksInNewTab: Bool = 0;
+    def onHtmlTag: HtmlTagHandler;
 
     //---------
     // Handlers
@@ -144,23 +149,52 @@ class MarkdownTranslator [RegexType: type] {
             Rule("(#+) ([^\n]+)\n", closure(args: Array[String]) {
                 this.jumpToLevel(String(), 0, false);
                 def i: Int = args(1).getLength();
-                this.output += String.format("\n<h%i>%s</h%i>", i, args(2).buf, i);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("\n<h%i>%s</h%i>", i, args(2).buf, i);
+                } else {
+                    this.output += "\n";
+                    def str: String = this.onHtmlTag(
+                        String.format("h%i", i),
+                        args(2),
+                        String()
+                    );
+                    if str == "" this.output += String.format("<h%i>%s</h%i>", i, args(2).buf, i)
+                    else this.output += str;
+                }
                 this.moveBackUtf8Chars(1);
             }),
             // strong and italic
             Rule("\\*\\*\\*([^*]+)\\*\\*\\*", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                this.output += String.format("<em><strong>%s</strong></em>", args(1).buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<em><strong>%s</strong></em>", args(1).buf);
+                } else {
+                    def str: String = this.onHtmlTag("em&strong", args(1), String());
+                    if str == "" this.output += String.format("<em><strong>%s</strong></em>", args(1).buf)
+                    else this.output += str;
+                }
             }),
             // strong
             Rule("\\*\\*([^*]+)\\*\\*", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                this.output += String.format("<strong>%s</strong>", args(1).buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<strong>%s</strong>", args(1).buf);
+                } else {
+                    def str: String = this.onHtmlTag("strong", args(1), String());
+                    if str == "" this.output += String.format("<strong>%s</strong>", args(1).buf)
+                    else this.output += str;
+                }
             }),
             // italic
             Rule("\\*([^*\n]+)\\*", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                this.output += String.format("<em>%s</em>", args(1).buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<em>%s</em>", args(1).buf);
+                } else {
+                    def str: String = this.onHtmlTag("em", args(1), String());
+                    if str == "" this.output += String.format("<em>%s</em>", args(1).buf)
+                    else this.output += str;
+                }
             }),
             // code
             Rule("[ \t\r\n]*(\n *)```([^`]*)\n *```", closure(args: Array[String]) {
@@ -168,11 +202,23 @@ class MarkdownTranslator [RegexType: type] {
                 if i > this.elementStack.getLength() i = this.elementStack.getLength();
                 this.output += "\n";
                 this.jumpToLevel(this.elementStack(i - 1), i, false);
-                this.output += String.format("<pre>%s\n</pre>", args(2).replace(args(1), "\n").buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<pre>%s\n</pre>", args(2).replace(args(1), "\n").buf);
+                } else {
+                    def str: String = this.onHtmlTag("pre", args(2), String());
+                    if str != "" this.output += str
+                    else this.output += String.format("<pre>%s\n</pre>", args(2).replace(args(1), "\n").buf);
+                }
                 if i == 0 this.output += "\n";
             }),
             Rule("`([^`]+)`", closure(args: Array[String]) {
-                this.output += String.format("<code>%s</code>", args(1).buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<code>%s</code>", args(1).buf);
+                } else {
+                    def str: String = this.onHtmlTag("code", args(1), String());
+                    if str == "" this.output += String.format("<code>%s</code>", args(1).buf)
+                    else this.output += str;
+                }
             }),
             Rule("``", closure(args: Array[String]) {
                 this.output += "`";
@@ -181,21 +227,37 @@ class MarkdownTranslator [RegexType: type] {
             Rule("[ \t\r\n]*\n---\n", closure(args: Array[String]) {
                 this.output += "\n";
                 this.jumpToLevel(String(), 0, false);
-                this.output += "<hr>\n";
+                if this.onHtmlTag.isNull() {
+                    this.output += "<hr>\n";
+                } else {
+                    def str: String = this.onHtmlTag("hr", String(), String());
+                    if str == "" this.output += "<hr>\n"
+                    else this.output += str;
+                }
             }),
             // link
             Rule("\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
                 if args(1) == "" args(1) = args(2);
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                if this.linksInNewTab {
-                    this.output += String.format("<a href=\"%s\" target=\"_blank\">%s</a>", args(2).buf, args(1).buf);
+                def target: CharsPtr = "";
+                if this.linksInNewTab target = "target=\"_blank\""
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
                 } else {
-                    this.output += String.format("<a href=\"%s\">%s</a>", args(2).buf, args(1).buf);
+                    def str: String = this.onHtmlTag("a", args(2), args(1));
+                    if str != "" this.output += str
+                    else this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
                 }
             }),
             // image
             Rule("!\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
-                this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+                } else {
+                    def str: String = this.onHtmlTag("img", args(2), args(1));
+                    if str != "" this.output += str
+                    else this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+                }
             }),
             // ul
             Rule("([ \t\r\n]*\n)([ ]*)\\* ([^ \t\n])", closure(args: Array[String]) {
