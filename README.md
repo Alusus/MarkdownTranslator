@@ -1,5 +1,5 @@
 # MarkdownTranslator
-[[عربي]](readme.ar.md)
+[[عربي]](README.ar.md)
 
 Alusus library for translating from Markdown to HTML.
 
@@ -43,4 +43,12 @@ You can control the creation of HTML tags by setting the onHtmlTag closure, whic
 
 The closure should return a string, which is the generated HTML tag. If it returns an empty string then
 MarkdownTranslator will generate the HTML tag itself.
+
+---
+
+## License
+
+Copyright (C) 2026 Sarmad Abdullah
+
+This project is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0). See the `COPYING` and `COPYING.LESSER` files for details.
 
