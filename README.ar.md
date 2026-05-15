@@ -11,14 +11,14 @@
 
 ```
 اشمل "مـحا"؛
-مـحا.اشمل_ملف("Alusus/MarkdownTranslator"، "مـترجم_ماركداون.أسس")؛
+مـحا.اشمل_حزمة("Alusus/MarkdownTranslator@0.1"، "مـترجم_ماركداون.أسس")؛
 ```
 
 <div dir=ltr>
 
 ```
 import "Apm";
-Apm.importFile("Alusus/MarkdownTranslator");
+Apm.importPackage("Alusus/MarkdownTranslator@0.1");
 ```
 
 </div>

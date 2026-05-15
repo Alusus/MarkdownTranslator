@@ -9,7 +9,7 @@ Alusus library for translating from Markdown to HTML.
 
 ```
 import "Apm";
-Apm.importFile("Alusus/MarkdownTranslator");
+Apm.importPackage("Alusus/MarkdownTranslator@0.1");
 ```
 
 * Instantiate the class:
