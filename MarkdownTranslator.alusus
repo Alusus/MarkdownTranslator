@@ -230,6 +230,10 @@ class MarkdownTranslator [RegexType: type] {
                 }
                 if i == 0 this.output += "\n";
             }),
+            Rule("\\\\`", closure(args: Array[String]) {
+                if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
+                this.output += "`";
+            }),
             Rule("`([^`]+)`", closure(args: Array[String]) {
                 if this.onHtmlTag.isNull() {
                     this.output += String.format("<code>%s</code>", args(1).buf);
