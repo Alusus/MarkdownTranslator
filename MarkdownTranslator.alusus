@@ -255,7 +255,7 @@ class MarkdownTranslator [RegexType: type] {
                 }
             }),
             // link
-            Rule("\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
+            Rule("\\[([^]\n]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
                 if args(1) == "" args(1) = args(2);
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 def target: CharsPtr = "";
@@ -269,7 +269,7 @@ class MarkdownTranslator [RegexType: type] {
                 }
             }),
             // image
-            Rule("!\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
+            Rule("!\\[([^]\n]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
                 if this.onHtmlTag.isNull() {
                     this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
                 } else {
@@ -328,7 +328,7 @@ class MarkdownTranslator [RegexType: type] {
                 }
             }),
             // all chars
-            Rule("[^\n*\\\\`!\\x5B]+", closure(args: Array[String]) {
+            Rule("[^\n*\\\\`![]+", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 this.output += args(0);
             }),
