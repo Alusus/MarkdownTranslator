@@ -317,6 +317,20 @@ class MarkdownTranslator [RegexType: type] {
                 this.output += "<br>\n";
                 this.printIndent();
             }),
+            Rule("\n[ \t]*\n((  )+)([^ \t\n])", closure(args: Array[String]) {
+                def i: Int = args(1).getLength() / 2;
+                if this.elementStack.getLength() > 0 && i <= this.elementStack.getLength() {
+                    this.output += "\n";
+                    this.printTag(String("</p>"), i - 1);
+                    this.printTag(String("<p>"), i - 1);
+                    this.jumpToLevel(this.elementStack(i - 1), i, false);
+                    this.moveBackUtf8Chars(1);
+                } else {
+                    this.output += "\n";
+                    this.jumpToLevel(String(""), 0, false);
+                    this.moveBackUtf8Chars(args(1).getLength() + 1);
+                }
+            }),
             Rule("\n[ \t]*\n", closure(args: Array[String]) {
                 this.output += "\n";
                 this.jumpToLevel(String(""), 0, false);
@@ -340,8 +354,8 @@ class MarkdownTranslator [RegexType: type] {
 
         this.elementTagsMap = Map[String, ElementTags]()
             .set(String("p"), ElementTags("<p>", "</p>", "</p><p>"))
-            .set(String("ul"), ElementTags("<ul><li>", "</li></ul>", "</li><li>"))
-            .set(String("ol"), ElementTags("<ol><li>", "</li></ol>", "</li><li>"))
-            .set(String("blockquote"), ElementTags("<blockquote>", "</blockquote>", "</blockquote><blockquote>"));
+            .set(String("ul"), ElementTags("<ul><li><p>", "</p></li></ul>", "</p></li><li><p>"))
+            .set(String("ol"), ElementTags("<ol><li><p>", "</p></li></ol>", "</p></li><li><p>"))
+            .set(String("blockquote"), ElementTags("<blockquote><p>", "</p></blockquote>", "</p></blockquote><blockquote><p>"));
     }
 }
