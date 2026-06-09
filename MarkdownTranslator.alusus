@@ -254,8 +254,22 @@ class MarkdownTranslator [RegexType: type] {
                     else this.output += str;
                 }
             }),
+            // link with double brackets [[text]](url)
+            Rule("\\[\\[([^]\n]*)\\]\\]\\(([^ \t\n]+)\\)", closure(args: Array[String]) {
+                def linkText: String = String("[") + args(1) + String("]");
+                if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
+                def target: CharsPtr = "";
+                if this.linksInNewTab target = "target=\"_blank\""
+                if this.onHtmlTag.isNull() {
+                    this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, linkText.buf);
+                } else {
+                    def str: String = this.onHtmlTag("a", args(2), linkText);
+                    if str != "" this.output += str
+                    else this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, linkText.buf);
+                }
+            }),
             // link
-            Rule("\\[([^]\n]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
+            Rule("\\[([^]\n]*)\\]\\(([^ \t\n]+)\\)", closure(args: Array[String]) {
                 if args(1) == "" args(1) = args(2);
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 def target: CharsPtr = "";
