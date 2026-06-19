@@ -15,7 +15,7 @@ Apm.importPackage("Alusus/MarkdownTranslator@0.1");
 * Instantiate the class:
 
 ```
-def translator: MarkdownTranslator;
+def translator: MarkdownTranslator[Regex.Matcher];
 ```
 
 * Convert from MD to HTML:
@@ -25,6 +25,25 @@ htmlString = translator.translate(markdownString);
 ```
 
 The `translate` method takes s `String` and returns a `String`.
+
+### Template Arguments
+
+`MarkdownTranslator` accepts two template arguments:
+
+* `RegexType: type`
+  The regex engine type to use for pattern matching.
+
+* `USE_POSIX_REGEX: integer = 0`
+  When set to `1`, switches the regex patterns for links, images, and general text to
+  POSIX-compatible variants. Use this when the regex engine you are providing requires
+  POSIX ERE syntax (e.g. it does not support `\x5D` hex escapes for `]`). Defaults to `0`
+  (non-POSIX patterns).
+
+Example:
+
+```
+def translator: MarkdownTranslator[Regex.Matcher, 1];
+```
 
 ### onHtmlTag Function
 

@@ -27,13 +27,13 @@ Apm.importPackage("Alusus/MarkdownTranslator@0.1");
 
 
 ```
-عرف مترجم: مـترجم_ماركداون؛
+عرف مترجم: مـترجم_ماركداون[نـمط.مـطابق]؛
 ```
 
 <div dir=ltr>
 
 ```
-def translator: MarkdownTranslator;
+def translator: MarkdownTranslator[Regex.Matcher];
 ```
 
 </div>
@@ -54,6 +54,33 @@ htmlString = translator.translate(markdownString);
 </div>
 
 دالة `ترجم` تستلم `نـص` وترجع `نـص`.
+
+### معطيات القالب
+
+يقبل `مـترجم_ماركداون` (`MarkdownTranslator`) معطيَي قالب:
+
+* `RegexType: type`
+  نوع محرك التعبيرات النمطية (regex) المستخدم للمطابقة.
+
+* `USE_POSIX_REGEX: integer = 0`
+  عند ضبطه على `1`، يُغيَّر نمط التعبيرات النمطية للروابط والصور والنصوص العامة إلى صيغة
+  متوافقة مع POSIX. استخدم هذا الخيار عندما يتطلب محرك التعبيرات النمطية الذي تستخدمه صيغة
+  POSIX ERE (أي لا يدعم الهروب بالصيغة السداسية مثل `\x5D` للرمز `]`). القيمة الافتراضية
+  هي `0` (أنماط غير POSIX).
+
+مثال:
+
+```
+عرف مترجم: مـترجم_ماركداون[نـمط.مـطابق، 1]؛
+```
+
+<div dir=ltr>
+
+```
+def translator: MarkdownTranslator[Regex.Matcher, 1];
+```
+
+</div>
 
 ### دالة عند_الترميز (onHtmlTag)
 

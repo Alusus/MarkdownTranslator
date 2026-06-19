@@ -24,7 +24,7 @@ import "closure";
 //==========================================================================
 // MarkdownTranslator
 // Translates MD documents into HTML.
-class MarkdownTranslator [RegexType: type] {
+class MarkdownTranslator [RegexType: type, USE_POSIX_REGEX: integer = 0] {
     use Srl;
 
     //----------
@@ -263,30 +263,62 @@ class MarkdownTranslator [RegexType: type] {
                     else this.output += str;
                 }
             }),
+            // link with double brackets [[text]](url)
+            Rule(
+                CharsPtr().{
+                    if USE_POSIX_REGEX == 1 this = "\\[\\[([^]\n]*)\\]\\]\\(([^ \t\n]+)\\)"
+                    else this = "\\[\\[([^\n\\x5D]*)\\]\\]\\(([^()\n]+)\\)"
+                },
+                closure(args: Array[String]) {
+                    def linkText: String = String("[") + args(1) + String("]");
+                    if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
+                    def target: CharsPtr = "";
+                    if this.linksInNewTab target = "target=\"_blank\""
+                    if this.onHtmlTag.isNull() {
+                        this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, linkText.buf);
+                    } else {
+                        def str: String = this.onHtmlTag("a", args(2), linkText);
+                        if str != "" this.output += str
+                        else this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, linkText.buf);
+                    }
+                }
+            ),
             // link
-            Rule("\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
-                if args(1) == "" args(1) = args(2);
-                if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                def target: CharsPtr = "";
-                if this.linksInNewTab target = "target=\"_blank\""
-                if this.onHtmlTag.isNull() {
-                    this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
-                } else {
-                    def str: String = this.onHtmlTag("a", args(2), args(1));
-                    if str != "" this.output += str
-                    else this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
+            Rule(
+                CharsPtr().{
+                    if USE_POSIX_REGEX == 1 this = "\\[([^]\n]*)\\]\\(([^ \t\n]+)\\)"
+                    else this = "\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)"
+                },
+                closure(args: Array[String]) {
+                    if args(1) == "" args(1) = args(2);
+                    if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
+                    def target: CharsPtr = "";
+                    if this.linksInNewTab target = "target=\"_blank\""
+                    if this.onHtmlTag.isNull() {
+                        this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
+                    } else {
+                        def str: String = this.onHtmlTag("a", args(2), args(1));
+                        if str != "" this.output += str
+                        else this.output += String.format("<a href=\"%s\" %s>%s</a>", args(2).buf, target, args(1).buf);
+                    }
                 }
-            }),
+            ),
             // image
-            Rule("!\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)", closure(args: Array[String]) {
-                if this.onHtmlTag.isNull() {
-                    this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
-                } else {
-                    def str: String = this.onHtmlTag("img", args(2), args(1));
-                    if str != "" this.output += str
-                    else this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+            Rule(
+                CharsPtr().{
+                    if USE_POSIX_REGEX == 1 this = "!\\[([^]\n]*)\\]\\(([^()\n]+)\\)"
+                    else this = "!\\[([^\n\\x5D]*)\\]\\(([^()\n]+)\\)"
+                },
+                closure(args: Array[String]) {
+                    if this.onHtmlTag.isNull() {
+                        this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+                    } else {
+                        def str: String = this.onHtmlTag("img", args(2), args(1));
+                        if str != "" this.output += str
+                        else this.output += String.format("<img src=\"%s\" title=\"%s\">", args(2).buf, args(1).buf);
+                    }
                 }
-            }),
+            ),
             // ul
             Rule("([ \t\r\n]*\n)([ ]*)\\* ([^ \t\n])", closure(args: Array[String]) {
                 def i: Int = 1 + args(2).getLength() / 2;
@@ -337,10 +369,16 @@ class MarkdownTranslator [RegexType: type] {
                 }
             }),
             // all chars
-            Rule("[^\n*\\\\`!\\x5B]+", closure(args: Array[String]) {
-                if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
-                this.output += args(0);
-            }),
+            Rule(
+                CharsPtr().{
+                    if USE_POSIX_REGEX == 1 this = "[^\n*\\\\`![]+"
+                    else this = "[^\n*\\\\`!\\x5B]+"
+                },
+                closure(args: Array[String]) {
+                    if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
+                    this.output += args(0);
+                }
+            ),
             Rule(".", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 this.output += args(0);
