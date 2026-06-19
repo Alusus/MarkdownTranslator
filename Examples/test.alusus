@@ -36,6 +36,10 @@ md += "\n";
 md += "[Alusus Website](https://alusus.org)\n";
 md += "\n";
 
+// Internal Link
+md += "[[Other File]](other_file.md)\n";
+md += "\n";
+
 // Image
 md += "![Alusus Logo](alusus_logo.png)\n";
 md += "\n";

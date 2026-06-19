@@ -17,6 +17,9 @@ code block line 2
 <p>
  <a href="https://alusus.org" >Alusus Website</a>
 </p>
+<p>
+ <a href="other_file.md" >[Other File]</a>
+</p>
 <img src="alusus_logo.png" title="Alusus Logo">
 <ul><li>
  Item 1
