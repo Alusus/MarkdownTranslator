@@ -17,6 +17,10 @@
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+import "Srl/String";
+import "Srl/Array";
+import "closure";
+
 //==========================================================================
 // MarkdownTranslator
 // Translates MD documents into HTML.
@@ -306,11 +310,11 @@ class MarkdownTranslator [RegexType: type] {
                 this.moveBackUtf8Chars(1);
             }),
             // ul/ol continuation
-            Rule("\n((  )+)([^ \t\n])", closure(args: Array[String]) {
-                def i: Int = args(1).getLength() / 2;
+            Rule("(\n[ \t]*)*\n((  )+)([^ \t\n])", closure(args: Array[String]) {
+                def i: Int = args(2).getLength() / 2;
                 this.output += "\n";
-                if i > this.elementStack.getLength() this.jumpToLevel(String("ul"), i, false)
-                else this.jumpToLevel(this.elementStack(i - 1), i, false);
+                if args(1).getLength() > 0 this.output += "<br>";
+                if i < this.elementStack.getLength() this.jumpToLevel(this.elementStack(i - 1), i, false);
                 this.moveBackUtf8Chars(1);
             }),
             // New lines
