@@ -1,103 +1,44 @@
 import "Srl/Console";
 import "Srl/Regex";
+import "Srl/Fs";
 import "Apm";
 Apm.importPackage("Alusus/MarkdownTranslator@0.1");
+Apm.importPackage("Alusus/ProgArg@0.2");
 
 use Srl;
 
-def md: String;
-
-// Headings
-md += "# Heading 1\n";
-md += "## Heading 2\n";
-md += "### Heading 3\n";
-md += "\n";
-
-// Paragraph with bold, italic, and bold+italic
-md += "This is a paragraph with **bold**, *italic*, and ***bold italic*** text.\n";
-md += "\n";
-
-// Inline code, escaped backtick, and double backtick
-md += "Inline `code` here, escaped backtick \\` and double backtick ``.\n";
-md += "\n";
-
-// Code block
-md += "```\n";
-md += "code block line 1\n";
-md += "code block line 2\n";
-md += "```\n";
-md += "\n";
-
-// Horizontal rule
-md += "---\n";
-md += "\n";
-
-// Link
-md += "[Alusus Website](https://alusus.org)\n";
-md += "\n";
-
-// Internal Link
-md += "[[Other File]](other_file.md)\n";
-md += "\n";
-
-// Image
-md += "![Alusus Logo](alusus_logo.png)\n";
-md += "\n";
-
-// Unordered list with nested items
-md += "* Item 1\n";
-md += "* Item 2\n";
-md += "  * Nested Item 2.1\n";
-md += "  * Nested Item 2.2\n";
-md += "* Item 3\n";
-md += "\n";
-
-// Unordered list with nested items and multiple blocks
-md += "New list:\n";
-md += "* Item 1\n";
-md += "  item 1 continued\n";
-md += "* Item 2\n";
-md += "  * Nested Item 2.1\n";
-md += "    nested item 2.1 continued\n";
-md += "  * Nested Item 2.2\n\n";
-md += "    nested Item 2.2 continued\n";
-md += "  * Nested Item 2.3\n\n";
-md += "      nested item 2.3 continued\n";
-md += "  item 2 continued\n";
-md += "* Item 3\n";
-md += "\n";
-
-// Ordered list with nested items
-md += "1. First\n";
-md += "2. Second\n";
-md += "   1. Nested First\n";
-md += "   2. Nested Second\n";
-md += "3. Third\n";
-md += "\n\n";
-
-// Ordered list with nested items with multiple blocks
-md += "New list:\n";
-md += "1. First\n";
-md += "   first continued\n";
-md += "2. Second\n";
-md += "   1. Nested First\n";
-md += "      nested first continued\n";
-md += "   2. Nested Second\n\n";
-md += "      nested second continued\n";
-md += "3. Third\n";
-md += "\n";
-
-// Blockquote
-md += "> This is a blockquote.\n";
-md += "\n";
-
-// Forced line break using trailing spaces
-md += "Line one with forced break  \n";
-md += "Line two continues here.\n";
-md += "\n";
-
-// Forced line break using \\n escape
-md += "First part.\\n Second part on new line.\n";
-
+def md: String = Fs.readFile("test.md");
 def translator: MarkdownTranslator[Regex.Matcher];
-Srl.Console.print(translator.translate(md));
+
+ProgArg.initialize();
+ProgArg.cmdDef = ProgArg.CmdDef().{
+    description = "Run the test and print the result.";
+    callback = closure (options: Map[String, String], args: Array[String]) {
+        def expectedHtml: String = Fs.readFile("test.html");
+        def generatedHtml: String = translator.translate(md);
+        if generatedHtml == expectedHtml {
+            Console.print("Test successful.\n");
+        } else {
+            Console.print("Test failed.\n");
+        }
+    };
+    subCmds = Array[SrdRef[ProgArg.CmdDef]]({
+        ProgArg.CmdDef().{
+            kwd = "print";
+            description = "Print the generated html.";
+            callback = closure (options: Map[String, String], args: Array[String]) {
+                def generatedHtml: String = translator.translate(md);
+                Console.print(generatedHtml);
+            };
+        },
+        ProgArg.CmdDef().{
+            kwd = "update";
+            description = "Update the test snapshot.";
+            callback = closure (options: Map[String, String], args: Array[String]) {
+                def generatedHtml: String = translator.translate(md);
+                Fs.createFile("test.html", generatedHtml, generatedHtml.getLength());
+            };
+        }
+    });
+};
+ProgArg.parse(2);
