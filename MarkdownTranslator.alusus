@@ -342,7 +342,7 @@ class MarkdownTranslator [RegexType: type, USE_POSIX_REGEX: integer = 0] {
                 }
             ),
             // ul
-            Rule("([ \t\r\n]*\n)([ ]*)\\* ([^ \t\n])", closure(args: Array[String]) {
+            Rule("([ \t\r\n]*\n)([ ]*)([-*+]) ([^ \t\n])", closure(args: Array[String]) {
                 def i: Int = 1 + args(2).getLength() / 2;
                 this.output += "\n";
                 this.jumpToLevel(String("ul"), i, true);
