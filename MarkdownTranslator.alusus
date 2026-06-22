@@ -220,17 +220,39 @@ class MarkdownTranslator [RegexType: type, USE_POSIX_REGEX: integer = 0] {
                 }
             }),
             // code
-            Rule("[ \t\r\n]*(\n *)```([^`]*)\n *```", closure(args: Array[String]) {
+            Rule("[ \t\r\n]*(\n *)```", closure(args: Array[String]) {
+                // We need to find the closing tag manually because of limitation in Posix regex preventing
+                // us from matching the smallest code block that can also include single back ticks that are
+                // not the closing tag.
+
+                // Find the closing tag
+                def closingIndex: Int = this.content.find(this.index, "```");
+                if closingIndex == -1 {
+                    // No closing tag is found, we'll add the opening tag as is
+                    this.output += args(0);
+                    return;
+                }
+                // Find the end of the code block
+                def codeEnd: Int = closingIndex - 1;
+                while this.content(codeEnd) == ' ' or this.content(codeEnd) == '\t' { --codeEnd };
+                if this.content(codeEnd) != '\n' {
+                    this.output += args(0);
+                    return;
+                }
+                // Extract the code block
+                def code: String = this.content.slice(this.index, codeEnd - this.index);
+                this.index = closingIndex + 3; // point to right after the 3 back ticks
+                // Find the indentation level and finish the processing
                 def i: Int = (args(1).getLength() - 1) / 2;
                 if i > this.elementStack.getLength() i = this.elementStack.getLength();
                 this.output += "\n";
                 this.jumpToLevel(this.elementStack(i - 1), i, false);
                 if this.onHtmlTag.isNull() {
-                    this.output += String.format("<pre>%s\n</pre>", args(2).replace(args(1), "\n").buf);
+                    this.output += String.format("<pre>%s\n</pre>", code.replace(args(1), "\n").buf);
                 } else {
-                    def str: String = this.onHtmlTag("pre", args(2), String());
+                    def str: String = this.onHtmlTag("pre", code, String());
                     if str != "" this.output += str
-                    else this.output += String.format("<pre>%s\n</pre>", args(2).replace(args(1), "\n").buf);
+                    else this.output += String.format("<pre>%s\n</pre>", code.replace(args(1), "\n").buf);
                 }
                 if i == 0 this.output += "\n";
             }),
@@ -238,7 +260,7 @@ class MarkdownTranslator [RegexType: type, USE_POSIX_REGEX: integer = 0] {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 this.output += "`";
             }),
-            Rule("`([^`]+)`", closure(args: Array[String]) {
+            Rule("`([^`\n]+)`", closure(args: Array[String]) {
                 if this.elementStack.getLength() == 0 this.jumpToLevel(String("p"), 1, false);
                 if this.onHtmlTag.isNull() {
                     this.output += String.format("<code>%s</code>", args(1).buf);

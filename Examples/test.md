@@ -12,6 +12,18 @@ code block line 1
 code block line 2
 ```
 
+Code block with a single tick
+```
+code block ` line 1
+code block line 2
+```
+
+Code block with double ticks
+```
+code block `line` 1
+code block line 2
+```
+
 ---
 
 Link: 
@@ -62,6 +74,26 @@ Ordered list with nested items with multiple blocks:
 
       nested second continued
 3. Third
+
+Unordered list with code blocks:
+* Item 1
+  ```
+  code block 1 - line 1
+  code block 1 - line 2
+  ```
+* Item 2
+  * Nested Item 2.1
+    ```
+    code block 2 - line 1
+    code block 2 - line 2
+    ```
+  * Nested Item 2.2
+  
+    ```
+    code block 3 - line 1
+    code block 3 - line 2
+    ```
+* Item 3
 
 Blockquote:
 > This is a blockquote.

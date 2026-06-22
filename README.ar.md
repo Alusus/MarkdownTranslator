@@ -1,4 +1,4 @@
-# MarkdownTranslator
+# مـترجم_ماركداون (MarkdownTranslator)
 [[English]](README.md)
 
 <div dir=rtl>
