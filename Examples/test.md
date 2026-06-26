@@ -37,10 +37,10 @@ Image:
 
 Unordered list with nested items:
 * Item 1
-* Item 2
+- Item 2
   * Nested Item 2.1
   * Nested Item 2.2
-* Item 3
++ Item 3
 
 Unordered list with nested items and multiple blocks:
 * Item 1

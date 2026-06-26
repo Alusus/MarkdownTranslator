@@ -1,4 +1,5 @@
 # مـترجم_ماركداون (MarkdownTranslator)
+
 [[English]](README.md)
 
 <div dir=rtl>
@@ -98,8 +99,6 @@ def translator: MarkdownTranslator[Regex.Matcher, 1];
   بالإضافة إلى نص العنوان المستهدف.
 
 ترجع هذه الدالة النص المرمز. إن أرجعت نصًا فارغًا فسيُنشئ مـترجم_ماركداون النص المرمز بنفسها.
-
----
 
 ## الرخصة
 
